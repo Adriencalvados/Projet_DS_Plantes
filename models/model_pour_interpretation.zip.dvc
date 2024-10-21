@@ -1,0 +1,5 @@
+outs:
+- md5: cec38195cc0975cd1d06e309ada7d54d
+  size: 416437649
+  hash: md5
+  path: model_pour_interpretation.zip

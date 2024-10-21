@@ -2,7 +2,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sn
 import streamlit as st
-import warnings
 import tensorflow as tf
 from keras.models import model_from_json
 from keras.preprocessing import image as image_utils
