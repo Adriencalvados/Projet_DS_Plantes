@@ -1,0 +1,5 @@
+outs:
+- md5: 00e3adf0b71d8dab39b1c4acd24968d4
+  size: 490535695
+  hash: md5
+  path: model_retenu.zip
