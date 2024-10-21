@@ -1,0 +1,2 @@
+['remote "myremote1"']
+    gdrive_service_account_json_file_path = ../models/atomic-graph-437912-e3-006877ce0826.json
