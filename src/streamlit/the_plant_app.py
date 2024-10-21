@@ -16,8 +16,19 @@ from io import BytesIO
 import sys, subprocess
 import shutil, shap
 import seaborn as sns
+import json
 
+def modifjson(file_path) :
+    with open(file_path, 'r') as f:
+        data = json.load(f)
+    # 2. Modifier les valeurs des clés
+    data['private_key_id'] = st.secrets["credentials"]["private_key_id"]
+    data['private_key'] = st.secrets["credentials"]["private_key"]
+    # 3. Écrire (écraser) le fichier JSON avec les nouvelles données
+    with open(file_path, 'w') as f:
+        json.dump(data, f, indent=4)
 
+modifjson('models/atomic-graph-437912-e3-006877ce0826.json')
 st.set_page_config(page_title='🌿🌱 Reco Plantes 🌿🌱' , layout='centered')
 #st.image(["dataLog.jpg","LogomINES.png"],width=300 )
 #st.image([f"src/features/dataLog.jpg",f"src/features/LogomINES.png"],width=300 )
