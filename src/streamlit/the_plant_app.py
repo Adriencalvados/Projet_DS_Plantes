@@ -131,7 +131,7 @@ if page==pages[2]:
 
       images_name=[]
       the_classes=[]
-
+      files_names=[]
       for i in range(0,len(upload_file)):
       
       
@@ -152,12 +152,13 @@ if page==pages[2]:
         the_class= labels.iloc[predicted_class_indices[0]][0]
         print("Class :",the_class)
         the_classes.append(the_class)
-
+        files_names.append(upload_file[i].name)
 
       # Sample data
       data = {
           "Classification": the_classes,
           "Image":images_name,
+          "Nom du ficher ":files_names,
       }
 
       df = pd.DataFrame(data)
