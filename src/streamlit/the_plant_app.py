@@ -130,7 +130,7 @@ if page==pages[2]:
     # Options pour l'acquisition d'image
     option = st.selectbox(
         "Choisissez la méthode d'acquisition d'image",
-        ("Acquisition par webcam", "Upload d'une image", "Extraction d'image","exemple")
+        ("Acquisition par webcam", "Upload d'une image", "Extraction d'image","Exemple d'images")
     )
     
     if option == "Acquisition par webcam":
@@ -213,7 +213,7 @@ if page==pages[2]:
                 st.error(f"Erreur lors de l'extraction de l'image : {e}")
 
     # 4. Exemple d'image venant du repo
-    elif option == "Exemple":
+    elif option == "Exemple d'images":
         st.write("Sélectionnez un exemple d'image à partir du repo.")
 
         # Liste des exemples d'images du repo (ex: stockées localement)
