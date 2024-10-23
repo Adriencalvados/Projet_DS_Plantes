@@ -88,6 +88,7 @@ def load_trained_model(logged_model):
 def my_preprocessing_func(img):
     image = np.array(img)
     return image / 255    
+#////////////////////////////////////////////Load////////////////////////////////////
     
 pull_data_with_dvc() 
 df=pd.read_csv("references/df_area.csv",sep=",",index_col=0,nrows=90000) 
@@ -124,51 +125,146 @@ if page == pages[1]:
     st.pyplot(fig)
 if page==pages[2]:
     cnn=load_trained_model(logged_model)
-    upload_file = st.file_uploader("Télecharger des images de plantes!",accept_multiple_files=True)
-    print("upload_file :",upload_file)
+    st.title("Sélecteur d'acquisition d'image")
 
-    if upload_file!= None:
+    # Options pour l'acquisition d'image
+    option = st.selectbox(
+        "Choisissez la méthode d'acquisition d'image",
+        ("Acquisition par webcam", "Upload d'une image", "Extraction d'image","exemple")
+    )
+    
+    if option == "Acquisition par webcam":
+        st.write("Cliquez sur le bouton ci-dessous pour capturer une image avec votre webcam.")
 
-      images_name=[]
-      the_classes=[]
-      files_names=[]
-      for i in range(0,len(upload_file)):
-      
-      
-        # image_name = "/content/"+upload_file[i].name
-        img = Image.open(upload_file[i])
-        images_name.append(img)
-        image_array = np.array(img)
-        # im=cv2.cvtColor(cv2.imread(image_array),cv2.COLOR_BGR2RGB)
-        im=cv2.cvtColor(image_array,cv2.COLOR_BGR2RGB)
-        im=cv2.resize(im,(256,256))
-        im=my_preprocessing_func(im)
-        print("shape",im.shape)
-        d=im.reshape(1,256,256,3)
-        print("reshape",d.shape)
-        pred=cnn.predict(d)
-        predicted_class_indices=np.argmax(pred,axis=1)
-        print("Class index:",predicted_class_indices[0])
-        the_class= labels.iloc[predicted_class_indices[0]][0]
-        print("Class :",the_class)
-        the_classes.append(the_class)
-        files_names.append(upload_file[i].name)
+        # Streamlit ne gère pas directement l'accès à la webcam, donc on simule cette partie
+        if st.button("Prendre une photo"):
+            # Simuler la capture avec OpenCV
+            cap = cv2.VideoCapture(0)
+            ret, frame = cap.read()
+            cap.release()
 
-      # Sample data
-      data = {
-          "Classification": the_classes,
-          "Image":images_name,
-          "Nom du ficher ":files_names,
-      }
+            if ret:
+                # Conversion de l'image OpenCV (BGR) en image PIL (RGB)
+                img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                img_pil = Image.fromarray(img_rgb)
+                st.image(img_pil, caption="Image capturée", use_column_width=True)
+            else:
+                st.error("Erreur lors de la capture d'image depuis la webcam.")
 
-      df = pd.DataFrame(data)
 
-      # Convert the image path column to actual images using HTML
-      df['Image'] = df['Image'].apply(path_to_image_html)
+     # 2. Upload d'une image
+    elif option == "Upload d'une image":
+        upload_file = st.file_uploader("Télecharger des images de plantes!",accept_multiple_files=True)
+        print("upload_file :",upload_file)
 
-      # Display the dataframe with images in Streamlit
-      st.write(df.to_html(escape=False), unsafe_allow_html=True)
-      # st.dataframe(df)
+        if upload_file!= None:
+
+        images_name=[]
+        the_classes=[]
+        files_names=[]
+        for i in range(0,len(upload_file)):
+        
+        
+            # image_name = "/content/"+upload_file[i].name
+            img = Image.open(upload_file[i])
+            images_name.append(img)
+            image_array = np.array(img)
+            # im=cv2.cvtColor(cv2.imread(image_array),cv2.COLOR_BGR2RGB)
+            im=cv2.cvtColor(image_array,cv2.COLOR_BGR2RGB)
+            im=cv2.resize(im,(256,256))
+            im=my_preprocessing_func(im)
+            print("shape",im.shape)
+            d=im.reshape(1,256,256,3)
+            print("reshape",d.shape)
+            pred=cnn.predict(d)
+            predicted_class_indices=np.argmax(pred,axis=1)
+            print("Class index:",predicted_class_indices[0])
+            the_class= labels.iloc[predicted_class_indices[0]][0]
+            print("Class :",the_class)
+            the_classes.append(the_class)
+            files_names.append(upload_file[i].name)
+
+        # Sample data
+        data = {
+            "Classification": the_classes,
+            "Image":images_name,
+            "Nom du ficher ":files_names,
+        }
+
+        df = pd.DataFrame(data)
+
+        # Convert the image path column to actual images using HTML
+        df['Image'] = df['Image'].apply(path_to_image_html)
+
+        # Display the dataframe with images in Streamlit
+        st.write(df.to_html(escape=False), unsafe_allow_html=True)
+        # st.dataframe(df)
+        
+    # 3. Extraction d'image depuis un lien
+    elif option == "Extraction d'image":
+        img_url = st.text_input("Entrez l'URL de l'image que vous voulez extraire")
+
+        if img_url:
+            try:
+                response = requests.get(img_url)
+                img = Image.open(BytesIO(response.content))
+                st.image(img, caption="Image extraite depuis l'URL", use_column_width=True)
+            except Exception as e:
+                st.error(f"Erreur lors de l'extraction de l'image : {e}")
+
+    # 4. Exemple d'image venant du repo
+    elif option == "Exemple":
+        st.write("Sélectionnez un exemple d'image à partir du repo.")
+
+        # Liste des exemples d'images du repo (ex: stockées localement)
+        example_images = {
+            "AppleCedarRust1": "src\features\test\AppleCedarRust1.JPG",
+            "AppleCedarRust2": src\features\test\AppleCedarRust2.JPG,
+            "AppleCedarRust3": src\features\test\AppleCedarRust3.JPG,
+            "AppleCedarRust4": src\features\test\AppleCedarRust4.JPG,
+            "AppleScab1": src\features\test\AppleScab1.JPG,
+            "AppleScab2": src\features\test\AppleScab2.JPG,
+            "AppleScab3": src\features\test\AppleScab3.JPG,
+            "CornCommonRust1": src\features\test\CornCommonRust1.JPG,
+            "CornCommonRust2": src\features\test\CornCommonRust2.JPG,
+            "CornCommonRust3": src\features\test\CornCommonRust3.JPG,
+            "PotatoEarlyBlight1": src\features\test\PotatoEarlyBlight1.JPG,
+            "PotatoEarlyBlight2": src\features\test\PotatoEarlyBlight2.JPG,
+            "PotatoEarlyBlight3": src\features\test\PotatoEarlyBlight3.JPG,
+            "PotatoEarlyBlight4": src\features\test\PotatoEarlyBlight4.JPG,
+            "PotatoEarlyBlight5": src\features\test\PotatoEarlyBlight5.JPG,
+            "PotatoHealthy1": src\features\test\PotatoHealthy1.JPG,
+            "PotatoHealthy2": src\features\test\PotatoHealthy2.JPG,
+            "TomatoEarlyBlight1": src\features\test\TomatoEarlyBlight1.JPG,
+            "TomatoEarlyBlight2": src\features\test\TomatoEarlyBlight2.JPG,
+            "TomatoEarlyBlight3": src\features\test\TomatoEarlyBlight3.JPG,
+            "TomatoEarlyBlight4": src\features\test\TomatoEarlyBlight4.JPG,
+            "TomatoEarlyBlight5": src\features\test\TomatoEarlyBlight5.JPG,
+            "TomatoEarlyBlight6": src\features\test\TomatoEarlyBlight6.JPG,
+            "TomatoHealthy1": src\features\test\TomatoHealthy1.JPG,
+            "TomatoHealthy2": src\features\test\TomatoHealthy2.JPG,
+            "TomatoHealthy3": src\features\test\TomatoHealthy3.JPG,
+            "TomatoHealthy4": src\features\test\TomatoHealthy4.JPG,
+            "TomatoYellowCurlVirus1": src\features\test\TomatoYellowCurlVirus1.JPG,
+            "TomatoYellowCurlVirus2": src\features\test\TomatoYellowCurlVirus2.JPG,
+            "TomatoYellowCurlVirus3": src\features\test\TomatoYellowCurlVirus3.JPG,
+            "TomatoYellowCurlVirus4": src\features\test\TomatoYellowCurlVirus4.JPG,
+            "TomatoYellowCurlVirus5": src\features\test\TomatoYellowCurlVirus5.JPG,
+            "TomatoYellowCurlVirus6": src\features\test\TomatoYellowCurlVirus6.JPG,            
+        }
+
+        # Choisir une image d'exemple
+        example_choice = st.selectbox("Choisissez une image d'exemple", list(example_images.keys()))
+
+        if example_choice:
+            # Charger l'image sélectionnée à partir du répertoire local
+            img_path = example_images[example_choice]
+            
+            try:
+                image = Image.open(img_path)
+                st.image(image, caption=f"Exemple d'image : {example_choice}", use_column_width=True)
+            except FileNotFoundError:
+                st.error(f"Erreur : L'image '{example_choice}' n'a pas été trouvée dans le répertoire.")
 
 if page == pages[3]:
     cnn=load_trained_model(logged_model)
