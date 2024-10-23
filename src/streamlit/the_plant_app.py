@@ -18,17 +18,7 @@ import shutil, shap
 import seaborn as sns
 import json
 
-def modifjson(file_path) :
-    with open(file_path, 'r') as f:
-        data = json.load(f)
-    # 2. Modifier les valeurs des clés
-    data['private_key_id'] = st.secrets["credentials"]["private_key_id"]
-    data['private_key'] = st.secrets["credentials"]["private_key"]
-    # 3. Écrire (écraser) le fichier JSON avec les nouvelles données
-    with open(file_path, 'w') as f:
-        json.dump(data, f, indent=4)
 
-modifjson('models/atomic-graph-437912-e3-006877ce0826.json')
 st.set_page_config(page_title='🌿🌱 Reco Plantes 🌿🌱' , layout='centered')
 #st.image(["dataLog.jpg","LogomINES.png"],width=300 )
 #st.image([f"src/features/dataLog.jpg",f"src/features/LogomINES.png"],width=300 )
@@ -57,7 +47,15 @@ def pull_data_with_dvc():
       else:
           st.write("Error pulling data!")
           st.write(result.stderr)
-    
+def modifjson(file_path) :
+    with open(file_path, 'r') as f:
+        data = json.load(f)
+    # 2. Modifier les valeurs des clés
+    data['private_key_id'] = st.secrets["credentials"]["private_key_id"]
+    data['private_key'] = st.secrets["credentials"]["private_key"]
+    # 3. Écrire (écraser) le fichier JSON avec les nouvelles données
+    with open(file_path, 'w') as f:
+        json.dump(data, f, indent=4)    
   # Function to convert image to base64
 def image_to_base64(im):
       # img = Image.open(img_path)
@@ -69,7 +67,7 @@ def image_to_base64(im):
 def path_to_image_html(path):
       return f'<img src="data:image/png;base64,{image_to_base64(path)}" width="300" >'
 
-@st.cache_data
+@st.cache_resource  # 👈 Add the caching decorator
 def load_trained_model(logged_model):
     base_model = VGG19(include_top=False,weights=None,input_shape=(256,256,3))
     x = layers.GlobalAveragePooling2D()(base_model.output)
@@ -87,21 +85,68 @@ def load_trained_model(logged_model):
     
 def my_preprocessing_func(img):
     image = np.array(img)
-    return image / 255    
-#////////////////////////////////////////////Load////////////////////////////////////
-    
-pull_data_with_dvc() 
-df=pd.read_csv("references/df_area.csv",sep=",",index_col=0,nrows=90000) 
-labels=pd.read_csv("references/labels.csv",header=0,index_col=0)
+    return image / 255
+
+def pre_process_img_streamlit(upload_file):
+    # image_name = "/content/"+upload_file[i].name
+    img = Image.open(upload_file)
+    image_array = np.array(img)
+    # im=cv2.cvtColor(cv2.imread(image_array),cv2.COLOR_BGR2RGB)
+    im=cv2.cvtColor(image_array,cv2.COLOR_BGR2RGB)
+    im=cv2.resize(im,(256,256))
+    im=my_preprocessing_func(im)
+    print("shape",im.shape)
+    d=im.reshape(1,256,256,3)
+    print("reshape",d.shape)
+    return d,img
+
+@st.cache_data
+def charger_dataframes():
+    df=pd.read_csv("references/df_area.csv",sep=",",index_col=0,nrows=90000) 
+    labels=pd.read_csv("references/labels.csv",header=0,index_col=0)
+    return df,labels
+#////////////////////////////////////////////FIN Load////////////////////////////////////
+with st.spinner('Wait for load...'):    
+    modifjson('models/atomic-graph-437912-e3-006877ce0826.json')
+    pull_data_with_dvc()
+    df,labels=charger_dataframes()
 
 
+#//////////////////////////////////////////pages[0]
 if page == pages[0]:
-    st.write("Introduction")
+    st.header("Introduction")
+    st.markdown("""
+    ### 🌿 **Appliquer les algorithmes de Deep Learning pour** :
 
+    - 🔍 **Détecter à partir d'une photo de plante :**
+    - 📸 L’**espèce** à laquelle cette plante appartient
+    - 🦠 Si la plante est **porteuse ou non d’une maladie**
+
+    ---
+
+    ### 🚀 **Application** :
+    Une fois **entraîné**, le modèle pourra traiter **n’importe quelle image de plante** prise au moyen d’un simple **appareil photo** 📱📷.
+
+    ---
+    """)
+    st.markdown("Multi plants &mdash;:tulip::cherry_blossom::rose::hibiscus::sunflower::blossom:")
+    st.image(Image.open("reports/figures/2-1-0-Adrien_1ervisu.png"))
+#//////////////////////////////////////////pages[1]
 if page == pages[1]:
-    st.write("Exploration des images")
+    st.header("Exploration des images")
+    # Texte avec des smileys et du markdown
+    markdown_text = """
+    **🌱 Source** : La base de données **Kaggle** sur les maladies des plantes.
 
-    st.write(df.shape)
+    - L'échantillon comprend **87 867** images réparties en **38 classes** 🌿, avec une moyenne de **2312 images** par classe 📸.
+    
+    - La **variable cible** correspond au nom du dossier lié à une plante 🪴, parfois agrégé avec le nom de la maladie 🌡️ : nous sommes dans un système **supervisé** de type **classification** 🧠.
+
+    - 🔄 La présence d'images similaires avec différentes **rotations**, **luminosité**, et **déformations** indique qu'une étape de **préprocessing** a été appliquée pour **augmenter** l'échantillon 🔧.
+    """
+
+    # Affichage en markdown dans Streamlit
+    st.markdown(markdown_text)
     st.subheader("Describe")
     st.dataframe(df.describe())
     fig = plt.figure()
@@ -123,9 +168,13 @@ if page == pages[1]:
     plt.xticks(rotation=90);
     plt.title("Train data: Area")
     st.pyplot(fig)
+    
+#//////////////////////////////////////////pages[2]
 if page==pages[2]:
-    cnn=load_trained_model(logged_model)
-    st.title("Sélecteur d'acquisition d'image")
+    with st.spinner('Wait for load...'):
+        cnn=load_trained_model(logged_model)
+
+    st.header("Sélecteur d'acquisition d'image")
 
     # Options pour l'acquisition d'image
     option = st.selectbox(
@@ -136,22 +185,16 @@ if page==pages[2]:
     if option == "Acquisition par webcam":
         st.write("Cliquez sur le bouton ci-dessous pour capturer une image avec votre webcam.")
 
-        # Streamlit ne gère pas directement l'accès à la webcam, donc on simule cette partie
-        if st.button("Prendre une photo"):
-            # Simuler la capture avec OpenCV
-            cap = cv2.VideoCapture(0)
-            ret, frame = cap.read()
-            cap.release()
+        img_file_buffer = st.camera_input("Take a picture")
 
-            if ret:
-                # Conversion de l'image OpenCV (BGR) en image PIL (RGB)
-                img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                img_pil = Image.fromarray(img_rgb)
-                st.image(img_pil, caption="Image capturée", use_column_width=True)
-            else:
-                st.error("Erreur lors de la capture d'image depuis la webcam.")
-
-
+        if img_file_buffer is not None:
+            d,img=pre_process_img_streamlit(img_file_buffer)    
+            pred=cnn.predict(d)
+            predicted_class_indices=np.argmax(pred,axis=1)
+            print("Class index:",predicted_class_indices[0])
+            the_class= labels.iloc[predicted_class_indices[0]][0]
+            st.write("Prédictions : "+the_class)
+            
      # 2. Upload d'une image
     elif option == "Upload d'une image":
         upload_file = st.file_uploader("Télecharger des images de plantes!",accept_multiple_files=True)
@@ -163,19 +206,8 @@ if page==pages[2]:
             the_classes=[]
             files_names=[]
             for i in range(0,len(upload_file)):
-            
-            
-                # image_name = "/content/"+upload_file[i].name
-                img = Image.open(upload_file[i])
-                images_name.append(img)
-                image_array = np.array(img)
-                # im=cv2.cvtColor(cv2.imread(image_array),cv2.COLOR_BGR2RGB)
-                im=cv2.cvtColor(image_array,cv2.COLOR_BGR2RGB)
-                im=cv2.resize(im,(256,256))
-                im=my_preprocessing_func(im)
-                print("shape",im.shape)
-                d=im.reshape(1,256,256,3)
-                print("reshape",d.shape)
+                        
+                d,img=pre_process_img_streamlit(upload_file[i])    
                 pred=cnn.predict(d)
                 predicted_class_indices=np.argmax(pred,axis=1)
                 print("Class index:",predicted_class_indices[0])
@@ -183,7 +215,7 @@ if page==pages[2]:
                 print("Class :",the_class)
                 the_classes.append(the_class)
                 files_names.append(upload_file[i].name)
-
+                images_name.append(img)
             # Sample data
             data = {
                 "Classification": the_classes,
@@ -265,53 +297,68 @@ if page==pages[2]:
                 st.image(image, caption=f"Exemple d'image : {example_choice}", use_column_width=True)
             except FileNotFoundError:
                 st.error(f"Erreur : L'image '{example_choice}' n'a pas été trouvée dans le répertoire.")
+    markdown_text = """
+    ### Modélisation - Réseaux de Neurones Convolutifs (CNN) 🧠🔍
 
+    - **Plusieurs modèles CNN testés** : VGG16, VGG19, ResNet 🤖
+    - **Métrique principale** : Accuracy (95% pour le meilleur modèle) 📊✅
+    - **Modèle final** : VGG19 avec des couches convolutives pour extraire les caractéristiques visuelles 🎯🖼️
+                    """
+    st.markdown(markdown_text)           
+#//////////////////////////////////////////pages[3]
 if page == pages[3]:
-    cnn=load_trained_model(logged_model)
+    with st.spinner('Wait for load...'):
+        cnn=load_trained_model(logged_model)
+
     st.header("Interprétation")
     upload_file = st.file_uploader("Télecharger des images de plantes!",accept_multiple_files=False)
     print("upload_file :",upload_file)
     if upload_file!= None:
-        img = Image.open(upload_file)
-        image_array = np.array(img)
-        im=cv2.cvtColor(image_array,cv2.COLOR_BGR2RGB)
-        im=cv2.resize(im,(256,256))
-        im=my_preprocessing_func(im)
-        #"reshape"
-        d=im.reshape(1,256,256,3)
-        
-        st.subheader("Grad-CAM")
-        
-        last_conv_layer = cnn.get_layer("block5_conv4")
-        last_conv_layer_model = Model(cnn.inputs, last_conv_layer.output)
-        classifier_input = Input(shape=last_conv_layer.output.shape[1:])
-        x = classifier_input
-        layer_names = []
-        for layer in cnn.layers[21:]:
-            layer_names.append(layer.name) # Noms des couches, afin que vous puissiez les intégrer à votre graphique
-        print(layer_names)
-        for layer_name in layer_names:
-            x = cnn.get_layer(layer_name)(x)
-        classifier_model = Model(classifier_input, x)
-        with tf.GradientTape() as tape:
-            inputs = d
-            last_conv_layer_output = last_conv_layer_model(inputs)
-            tape.watch(last_conv_layer_output)
-            preds = classifier_model(last_conv_layer_output)
-            top_pred_index = tf.argmax(preds[0])
-            top_class_channel = preds[:, top_pred_index]
-        grads = tape.gradient(top_class_channel, last_conv_layer_output)
-        pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-        last_conv_layer_output = last_conv_layer_output.numpy()[0]
-        pooled_grads = pooled_grads.numpy()
-        for i in range(pooled_grads.shape[-1]):
-            last_conv_layer_output[:, :, i] *= pooled_grads[i]
-        # Average over all the filters to get a single 2D array
-        gradcam = np.mean(last_conv_layer_output, axis=-1)
-        # Clip the values (equivalent to applying ReLU)
-        # and then normalise the values
-        gradcam = np.clip(gradcam, 0, np.max(gradcam)) / np.max(gradcam)
-        gradcam = cv2.resize(gradcam, (256, 256))
+        with st.spinner('Wait for load...'):
+            img = Image.open(upload_file)
+            image_array = np.array(img)
+            im=cv2.cvtColor(image_array,cv2.COLOR_BGR2RGB)
+            im=cv2.resize(im,(256,256))
+            im=my_preprocessing_func(im)
+            #"reshape"
+            d=im.reshape(1,256,256,3)
+
+            markdown_text = """
+            ### 🌟 Grad-CAM
+            Grad-CAM (Gradient-weighted Class Activation Mapping) est une méthode qui met en lumière les zones importantes 
+            d'une image pour la décision d'un modèle.  
+            """
+            st.markdown(markdown_text)  
+            last_conv_layer = cnn.get_layer("block5_conv4")
+            last_conv_layer_model = Model(cnn.inputs, last_conv_layer.output)
+            classifier_input = Input(shape=last_conv_layer.output.shape[1:])
+            x = classifier_input
+            layer_names = []
+            for layer in cnn.layers[21:]:
+                layer_names.append(layer.name) # Noms des couches, afin que vous puissiez les intégrer à votre graphique
+            print(layer_names)
+            for layer_name in layer_names:
+                x = cnn.get_layer(layer_name)(x)
+            classifier_model = Model(classifier_input, x)
+            with tf.GradientTape() as tape:
+                inputs = d
+                last_conv_layer_output = last_conv_layer_model(inputs)
+                tape.watch(last_conv_layer_output)
+                preds = classifier_model(last_conv_layer_output)
+                top_pred_index = tf.argmax(preds[0])
+                top_class_channel = preds[:, top_pred_index]
+            grads = tape.gradient(top_class_channel, last_conv_layer_output)
+            pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+            last_conv_layer_output = last_conv_layer_output.numpy()[0]
+            pooled_grads = pooled_grads.numpy()
+            for i in range(pooled_grads.shape[-1]):
+                last_conv_layer_output[:, :, i] *= pooled_grads[i]
+            # Average over all the filters to get a single 2D array
+            gradcam = np.mean(last_conv_layer_output, axis=-1)
+            # Clip the values (equivalent to applying ReLU)
+            # and then normalise the values
+            gradcam = np.clip(gradcam, 0, np.max(gradcam)) / np.max(gradcam)
+            gradcam = cv2.resize(gradcam, (256, 256))
 
         fig=plt.figure(figsize=(12,4))
         plt.subplot(131)
@@ -330,9 +377,15 @@ if page == pages[3]:
         plt.title('Interprétabilité des zones de recherche')
         plt.axis('off')
         st.pyplot(fig)
-
-        st.subheader("SHAP")
         st.write("Image exemple")
+        markdown_text = """
+                ### 🔍 SHAP
+                
+                SHAP explique l'impact de chaque pixel sur la prédiction finale du modèle.  
+
+
+        """
+        st.markdown(markdown_text)  
         st.image([f"reports/figures/output_SHAP.png"],width=750)
 
                     
