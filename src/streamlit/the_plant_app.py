@@ -159,46 +159,46 @@ if page==pages[2]:
 
         if upload_file!= None:
 
-        images_name=[]
-        the_classes=[]
-        files_names=[]
-        for i in range(0,len(upload_file)):
-        
-        
-            # image_name = "/content/"+upload_file[i].name
-            img = Image.open(upload_file[i])
-            images_name.append(img)
-            image_array = np.array(img)
-            # im=cv2.cvtColor(cv2.imread(image_array),cv2.COLOR_BGR2RGB)
-            im=cv2.cvtColor(image_array,cv2.COLOR_BGR2RGB)
-            im=cv2.resize(im,(256,256))
-            im=my_preprocessing_func(im)
-            print("shape",im.shape)
-            d=im.reshape(1,256,256,3)
-            print("reshape",d.shape)
-            pred=cnn.predict(d)
-            predicted_class_indices=np.argmax(pred,axis=1)
-            print("Class index:",predicted_class_indices[0])
-            the_class= labels.iloc[predicted_class_indices[0]][0]
-            print("Class :",the_class)
-            the_classes.append(the_class)
-            files_names.append(upload_file[i].name)
+            images_name=[]
+            the_classes=[]
+            files_names=[]
+            for i in range(0,len(upload_file)):
+            
+            
+                # image_name = "/content/"+upload_file[i].name
+                img = Image.open(upload_file[i])
+                images_name.append(img)
+                image_array = np.array(img)
+                # im=cv2.cvtColor(cv2.imread(image_array),cv2.COLOR_BGR2RGB)
+                im=cv2.cvtColor(image_array,cv2.COLOR_BGR2RGB)
+                im=cv2.resize(im,(256,256))
+                im=my_preprocessing_func(im)
+                print("shape",im.shape)
+                d=im.reshape(1,256,256,3)
+                print("reshape",d.shape)
+                pred=cnn.predict(d)
+                predicted_class_indices=np.argmax(pred,axis=1)
+                print("Class index:",predicted_class_indices[0])
+                the_class= labels.iloc[predicted_class_indices[0]][0]
+                print("Class :",the_class)
+                the_classes.append(the_class)
+                files_names.append(upload_file[i].name)
 
-        # Sample data
-        data = {
-            "Classification": the_classes,
-            "Image":images_name,
-            "Nom du ficher ":files_names,
-        }
+            # Sample data
+            data = {
+                "Classification": the_classes,
+                "Image":images_name,
+                "Nom du ficher ":files_names,
+            }
 
-        df = pd.DataFrame(data)
+            df = pd.DataFrame(data)
 
-        # Convert the image path column to actual images using HTML
-        df['Image'] = df['Image'].apply(path_to_image_html)
+            # Convert the image path column to actual images using HTML
+            df['Image'] = df['Image'].apply(path_to_image_html)
 
-        # Display the dataframe with images in Streamlit
-        st.write(df.to_html(escape=False), unsafe_allow_html=True)
-        # st.dataframe(df)
+            # Display the dataframe with images in Streamlit
+            st.write(df.to_html(escape=False), unsafe_allow_html=True)
+            # st.dataframe(df)
         
     # 3. Extraction d'image depuis un lien
     elif option == "Extraction d'image":
