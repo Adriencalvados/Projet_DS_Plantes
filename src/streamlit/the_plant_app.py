@@ -121,6 +121,7 @@ if page == pages[0]:
     - 🔍 **Détecter à partir d'une photo de plante :**
     - 📸 L’**espèce** à laquelle cette plante appartient
     - 🦠 Si la plante est **porteuse ou non d’une maladie**
+
     ---
     ### 🚀 **Application** :
     Une fois **entraîné**, le modèle pourra traiter **n’importe quelle image de plante** prise au moyen d’un simple **appareil photo** 📱📷.
@@ -239,6 +240,12 @@ if page==pages[2]:
                 response = requests.get(img_url)
                 img = Image.open(BytesIO(response.content))
                 st.image(img, caption="Image extraite depuis l'URL", use_column_width=True)
+                d,img=pre_process_img_streamlit(img_file_buffer)    
+                pred=cnn.predict(d)
+                predicted_class_indices=np.argmax(pred,axis=1)
+                print("Class index:",predicted_class_indices[0])
+                the_class= labels.iloc[predicted_class_indices[0]][0]
+                st.write("Prédictions : "+the_class)
             except Exception as e:
                 st.error(f"Erreur lors de l'extraction de l'image : {e}")
 
@@ -293,6 +300,12 @@ if page==pages[2]:
             try:
                 image = Image.open(img_path)
                 st.image(image, caption=f"Exemple d'image : {example_choice}", use_column_width=True)
+                d,img=pre_process_img_streamlit(img_file_buffer)    
+                pred=cnn.predict(d)
+                predicted_class_indices=np.argmax(pred,axis=1)
+                print("Class index:",predicted_class_indices[0])
+                the_class= labels.iloc[predicted_class_indices[0]][0]
+                st.write("Prédictions : "+the_class)            
             except FileNotFoundError:
                 st.error(f"Erreur : L'image '{example_choice}' n'a pas été trouvée dans le répertoire.")
     markdown_text = """
