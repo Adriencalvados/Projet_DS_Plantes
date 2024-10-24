@@ -233,20 +233,25 @@ if page==pages[2]:
         
     # 3. Extraction d'image depuis un lien
     elif option == "Extraction d'image":
-        url=f"https://www.google.com/imgres?q=image%20google%20strawberry%20feuille&imgurl=https%3A%2F%2Fphotoshop-kopona.com%2Fuploads%2Fposts%2F2018-06%2F1528827395_strawberry-92.jpg&imgrefurl=https%3A%2F%2Fphotoshop-kopona.com%2Ffr%2Fpage%2C4%2C61377-115-png-strawberry-png-berries-bushes-flowers-frames-leaves-in-baskets-buckets-on-cups.html&docid=D_ya4hPo64xseM&tbnid=lepTEJNuWKkMPM&vet=12ahUKEwjCkMLYvaeJAxWVTaQEHQhDCgYQM3oECHcQAA..i&w=864&h=550&hcb=2&ved=2ahUKEwjCkMLYvaeJAxWVTaQEHQhDCgYQM3oECHcQAA"
-        img_url = st.text_input("url")
+        url=f"https://photoshop-kopona.com/uploads/posts/2018-06/1528827395_strawberry-92.jpg"
+        img_url = st.text_input("URL",url)
 
         if img_url:
             try:
                 response = requests.get(img_url)
                 img = Image.open(BytesIO(response.content))
-                st.image(img, caption="Image extraite depuis l'URL", use_column_width=True)
-                d,img=pre_process_img_streamlit(img)    
+                image_array = np.array(img)
+                im=cv2.cvtColor(image_array,cv2.COLOR_BGR2RGB)
+                im=cv2.resize(im,(256,256))
+                im=my_preprocessing_func(im)
+                print("shape",im.shape)
+                d=im.reshape(1,256,256,3)   
                 pred=cnn.predict(d)
                 predicted_class_indices=np.argmax(pred,axis=1)
                 print("Class index:",predicted_class_indices[0])
                 the_class= labels.iloc[predicted_class_indices[0]][0]
                 st.write("Prédictions : "+the_class)
+                st.image(img, caption="Image extraite depuis l'URL")
             except Exception as e:
                 st.error(f"Erreur lors de l'extraction de l'image : {e}")
 
@@ -300,13 +305,14 @@ if page==pages[2]:
             
             try:
                 image = Image.open(img_path)
-                st.image(image, caption=f"Exemple d'image : {example_choice}", use_column_width=True)
-                d,img=pre_process_img_streamlit(image)    
+                
+                d,img=pre_process_img_streamlit(img_path)    
                 pred=cnn.predict(d)
                 predicted_class_indices=np.argmax(pred,axis=1)
                 print("Class index:",predicted_class_indices[0])
                 the_class= labels.iloc[predicted_class_indices[0]][0]
-                st.write("Prédictions : "+the_class)            
+                st.write("Prédictions : "+the_class)    
+                st.image(image, caption=f"Exemple d'image : {example_choice}")        
             except FileNotFoundError:
                 st.error(f"Erreur : L'image '{example_choice}' n'a pas été trouvée dans le répertoire.")
     markdown_text = """
