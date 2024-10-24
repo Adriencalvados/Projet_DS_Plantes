@@ -41,7 +41,7 @@ def pull_data_with_dvc():
       cmd = [sys.executable, "-m", "dvc", "pull"]
       result = subprocess.run(cmd, capture_output=True, text=True)
       if result.returncode == 0:
-          shutil.unpack_archive("models/model_retenu.zip", "models/model_retenu")
+          #shutil.unpack_archive("models/model_retenu.zip", "models/model_retenu")
           shutil.unpack_archive("models/model_pour_interpretation.zip", "models/model_pour_interpretation")
           
       else:
@@ -241,7 +241,7 @@ if page==pages[2]:
                 response = requests.get(img_url)
                 img = Image.open(BytesIO(response.content))
                 st.image(img, caption="Image extraite depuis l'URL", use_column_width=True)
-                d,img=pre_process_img_streamlit(img_file_buffer)    
+                d,img=pre_process_img_streamlit(img)    
                 pred=cnn.predict(d)
                 predicted_class_indices=np.argmax(pred,axis=1)
                 print("Class index:",predicted_class_indices[0])
@@ -301,7 +301,7 @@ if page==pages[2]:
             try:
                 image = Image.open(img_path)
                 st.image(image, caption=f"Exemple d'image : {example_choice}", use_column_width=True)
-                d,img=pre_process_img_streamlit(img_file_buffer)    
+                d,img=pre_process_img_streamlit(image)    
                 pred=cnn.predict(d)
                 predicted_class_indices=np.argmax(pred,axis=1)
                 print("Class index:",predicted_class_indices[0])

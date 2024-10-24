@@ -164,4 +164,3 @@ cython_debug/
 
 # Data folder
 data/
-models/
