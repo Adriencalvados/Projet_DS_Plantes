@@ -121,9 +121,7 @@ if page == pages[0]:
     - 🔍 **Détecter à partir d'une photo de plante :**
     - 📸 L’**espèce** à laquelle cette plante appartient
     - 🦠 Si la plante est **porteuse ou non d’une maladie**
-
     ---
-
     ### 🚀 **Application** :
     Une fois **entraîné**, le modèle pourra traiter **n’importe quelle image de plante** prise au moyen d’un simple **appareil photo** 📱📷.
 
