@@ -395,17 +395,6 @@ if page == pages[3]:
         plt.title('Interprétabilité des zones de recherche')
         plt.axis('off')
         st.pyplot(fig)
-        st.write("Image exemple")
-        markdown_text = """
-                ### 🔍 SHAP
-                
-                SHAP explique l'impact de chaque pixel sur la prédiction finale du modèle.  
-
-
-        """
-        st.markdown(markdown_text)  
-        st.image([f"reports/figures/output_SHAP.png"],width=750)
-
                     
 
 
