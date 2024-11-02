@@ -31,7 +31,7 @@ page=st.sidebar.radio("Aller vers", pages)
 st.sidebar.image([f"src/features/LogomINES.png"],width=200)
 st.sidebar.write("Adrien Pinel")
 st.sidebar.write("Guillaume Lezan")
-st.sidebar.write("Maria Flechas")
+st.sidebar.write("María Flechas")
 
 #////////////////////////////////////////////Load////////////////////////////////////
 
@@ -204,6 +204,7 @@ if page==pages[2]:
             images_name=[]
             the_classes=[]
             files_names=[]
+            probabilite = []
             for i in range(0,len(upload_file)):
                         
                 d,img=pre_process_img_streamlit(upload_file[i])    
@@ -212,14 +213,16 @@ if page==pages[2]:
                 print("Class index:",predicted_class_indices[0])
                 the_class= labels.iloc[predicted_class_indices[0]][0]
                 print("Class :",the_class)
+                probabilite.append(pred[0][predicted_class_indices[0]]*100)
                 the_classes.append(the_class)
                 files_names.append(upload_file[i].name)
                 images_name.append(img)
             # Sample data
             data = {
                 "Classification": the_classes,
-                "Image":images_name,
                 "Nom du ficher ":files_names,
+                "Probabilité % ":probabilite,
+                "Image":images_name    
             }
 
             df = pd.DataFrame(data)
