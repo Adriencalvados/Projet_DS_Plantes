@@ -213,7 +213,7 @@ if page==pages[2]:
                 print("Class index:",predicted_class_indices[0])
                 the_class= labels.iloc[predicted_class_indices[0]][0]
                 print("Class :",the_class)
-                probabilite.append(pred[0][predicted_class_indices[0]]*100)
+                probabilite.append(np.round(pred[0][predicted_class_indices[0]]*100,1))
                 the_classes.append(the_class)
                 files_names.append(upload_file[i].name)
                 images_name.append(img)
